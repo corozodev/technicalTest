@@ -1,0 +1,38 @@
+version: "3.12"
+
+services:
+  selenium:
+    image: selenium/standalone-chrome:latest
+    depends_on:
+        - app
+    ports:
+        - 7900:7900
+    environment:
+        - VNC_NO_PASSWORD=1
+        - SE_NODE_OVERRIDE_MAX_SESSIONS=true
+        - SE_NODE_MAX_SESSIONS=5
+        - SE_SCREEN_WIDTH=2560
+        - SE_SCREEN_HEIGHT=1440
+    restart: always
+    shm_size: 2gb
+    networks:
+      - demo-test-automation
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /var/www/app
+    container_name: demo-test-automation-container
+    restart: unless-stopped
+    tty: true
+    env_file: 
+     - .env
+    volumes:
+     - ./:/var/www/app
+    networks:
+      - demo-test-automation
+
+networks:
+  demo-test-automation:
+    driver: bridge
