@@ -1,6 +1,6 @@
 # QA Automation Technical Test
 
-En este repositorio presento el desarrollo y la ejecución de una suite de pruebas automatizadas E2E orientada a validar con rigor técnico los 5 casos de prueba requeridos sobre la plataforma [DemoQA](https://demoqa.com/). Diseñé la solución contenerizada con Docker Compose para garantizar reproducibilidad total e independencia del sistema operativo anfitrión.
+En este repositorio presento el desarrollo y la ejecución de una suite de pruebas automatizadas E2E orientada a validar con rigor técnico los 5 casos de prueba requeridos sobre la plataforma [DemoQA](https://demoqa.com/).
 
 Mi enfoque de testing no se limitó a automatizar clics o transiciones de pantalla: estructuré cada prueba para que verifique de forma fehaciente los cambios de estado, la integridad de los datos procesados y la respuesta del sistema tanto en flujos positivos como en validaciones de error.
 
