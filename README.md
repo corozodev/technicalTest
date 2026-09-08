@@ -1,62 +1,113 @@
-# Test QA Suite
-Demo test for new QA's.
+# QA Automation Technical Test
 
-## Getting started
+En este repositorio presento el desarrollo y la ejecución de una suite de pruebas automatizadas E2E orientada a validar con rigor técnico los 5 casos de prueba requeridos sobre la plataforma [DemoQA](https://demoqa.com/). Diseñé la solución contenerizada con Docker Compose para garantizar reproducibilidad total e independencia del sistema operativo anfitrión.
 
-Use this project to run the automated test in docker.
-Commands:
+Mi enfoque de testing no se limitó a automatizar clics o transiciones de pantalla: estructuré cada prueba para que verifique de forma fehaciente los cambios de estado, la integridad de los datos procesados y la respuesta del sistema tanto en flujos positivos como en validaciones de error.
 
-### example command
-docker compose exec app python3 -m pytest -rP test/test_demo.py
+---
+
+## Approach
+
+Para abordar esta prueba técnica definí las siguientes decisiones y buenas prácticas de ingeniería de calidad:
+
+- **Comprensión previa del flujo y la aplicación:** Antes de escribir código, analicé el comportamiento dinámico de los componentes React de DemoQA (datepickers, selects compuestos, modales y tablas) para identificar selectores estables y evitar fragilidad en las pruebas.
+- **Entorno aislado con Docker Compose:** Orquesté la suite con dos servicios: un contenedor con el runtime de pruebas (`app`) y un contenedor `selenium/standalone-chrome` que actúa como Selenium Grid. Configuré la suite para conectarse de manera predeterminada y transparente al servicio Chrome Standalone.
+- **Patrón Page Object Model (POM):** Separé la lógica de negocio y las aserciones de la interacción con el DOM, ubicando los locators y métodos de acción dentro de `src/pages/` (`BasePage`, `PracticeFormPage`, `SelectMenuPage` y `WebTablesPage`).
+- **Sincronización robusta con Explicit Waits:** Evité cualquier tipo de `sleep` arbitrario. Utilicé `WebDriverWait` y `expected_conditions` (visibilidad de elementos, estados interactuables y desaparición de transiciones asíncronas como `.modal-backdrop`) para garantizar estabilidad ante la latencia de red.
+- **Gestión determinista de datos de prueba:** Implementé fábricas de datos en `src/utils/data_generator.py` para generar usuarios e información de formulario aleatoria pero válida, con soporte para reproducir ejecuciones idénticas mediante la variable `QA_SEED`.
+- **Validación real de estados y no solo de acciones:** Me aseguré de que ninguna prueba se considere exitosa únicamente porque Selenium no arrojó excepción; cada caso verifica aserciones estrictas sobre los datos renderizados en tablas, títulos de confirmación y atributos de validación HTML5 (`validity.valid`).
+
+---
 
 ## Test Cases
-Test website: https://demoqa.com/
 
-- Case 1: Fill out all fields of the "Practice Form" with random values.  
+| # | Test Case | What I Validate | Status |
+|---|-----------|-----------------|--------|
+| 1 | Practice Form | Diligenciamiento completo de todos los campos con datos aleatorios (texto, radios, datepicker, subjects, hobbies, upload de archivo y dropdowns anidados de Estado/Ciudad) y validación exacta de cada dato en el modal de confirmación. | PASS |
+| 2 | Web Tables - Create User | Registro de un nuevo usuario con datos dinámicos en la tabla web, verificando su persistencia y la coincidencia de cada celda (First Name, Last Name, Age, Email, Salary, Department). | PASS |
+| 3 | Widgets / Select Menu | Selección y persistencia de valores en 5 tipos de menús desplegables: Select Value ("A root option"), Select One ("Ms."), Old Style Select ("Indigo"), Multiselect ("Blue", "Red") y Standard Multi Select ("Volvo", "Opel"). | PASS |
+| 4 | Web Tables - CRUD Lifecycle | Ciclo de vida completo sobre un registro propio: creación con datos aleatorios, edición de campos clave (First Name y Department) y eliminación final, confirmando que la fila ya no existe en la tabla. | PASS |
+| 5 | Web Tables - Form Validations | Rechazo de envío cuando los campos obligatorios están vacíos y cuando se ingresa un formato de email inválido, comprobando que el modal permanece abierto, que el navegador marca el campo con estado `:invalid` y que el registro no se inserta en la tabla. | PASS |
 
-- Case 2: Create a new user with random values.  
+> **Criterio de PASS:** En esta suite, un caso se marca como **PASS** únicamente cuando la aplicación refleja de forma verificable el resultado esperado de negocio tras interactuar con la interfaz real.
 
-- Case 3: In the section Widgets/Select Menu, select the next values:  
-    - Option Select Value: A root option  
-    - Option Select One:  Ms.  
-    - Option Old Style Select Menu: Indigo  
-    - Option Multiselect drop down: Blue and Red,   
-    - Option Standard multi select: Volvo and Opel.  
+---
 
-- Case 4: In the section Elements/Web Tables:  
-    - Add a new element with random values.  
-    - Edit the new element.  
-    - Delete the new element.  
+## Requirements
 
-- Case 5: In the section Elements/Web Tables fill the new element form with incorrect format and empty fields.  
+Para ejecutar este proyecto se requiere únicamente:
 
-## Points to consider in the evaluation:
-- It'll be considered to use page object model pattern.
-- It's recomended to validate error cases, for example: wrong Login, field with specific formats entered wrongly.
-- test's segmentation.
-- The project is initially configured to be executed using Selenium. However, candidates are free to use any automation testing tool or framework they are more familiar with, as long as the proposed solution allows the assigned test cases to be executed and properly validated.   
+- **Git**
+- **Docker Engine** (v20.10+ recomendado)
+- **Docker Compose** (v2.0+)
 
-## BONUS
-As an additional bonus, candidates may perform performance tests on one or more of the application's available flows.
+*Nota: No se requiere tener instalados Python, navegadores ni webdrivers localmente en la máquina anfitriona; todo el entorno corre dentro de los contenedores Docker.*
 
-The candidate is free to use any performance testing tool or framework they are familiar with, such as k6, JMeter, Gatling, Locust, or any other suitable tool.
+---
 
-For the performance testing bonus, use the ReqRes API:
+## Setup
 
-Base URL: https://reqres.in/
+1. **Clonar el repositorio:**
+   ```bash
+   git clone <URL_DEL_REPOSITORIO>
+   ```
 
-ReqRes requires an API key for API requests. 
+2. **Entrar al directorio del proyecto:**
+   ```bash
+   cd qa-test
+   ```
 
-Before executing the performance test:
+3. **Levantar los servicios con Docker Compose:**
+   ```bash
+   docker compose up -d --build
+   ```
 
-- Create a free account in ReqRes.
-- Generate an API key from the ReqRes dashboard.
-- Include the following header in your requests: x-api-key: YOUR_API_KEY
+4. **Comprobar que los contenedores estén corriendo:**
+   ```bash
+   docker compose ps
+   ```
+   *Deberás observar los servicios `app` (`demo-test-automation-container`) y `selenium` (`qa-test-selenium-1`) con estado `Up`.*
 
-Available endpoints:
+5. **Verificar la disponibilidad de la aplicación bajo prueba:**
+   ```bash
+   curl -I https://demoqa.com/
+   ```
+   *Debe responder con `HTTP/1.1 200 OK`.*
 
-GET https://reqres.in/api/users?page=2  : Retrieve a list of users.  
-GET https://reqres.in/api/users/2  : Retrieve a specific user.  
-POST https://reqres.in/api/users  : Create a new user.  
-PUT https://reqres.in/api/users/2  : Update an existing user.  
-DELETE https://reqres.in/api/users/2 : Delete an existing user.  
+---
+
+## Running the Tests
+
+Una vez levantado el entorno con Docker Compose, ejecuté y configuré los siguientes comandos:
+
+### Ejecutar toda la suite de pruebas
+Para correr los 5 casos de prueba completos:
+```bash
+docker compose exec app python3 -m pytest -v -rP
+```
+
+### Ejecutar un caso de prueba individual
+Para validar un caso específico de forma aislada:
+
+```bash
+# Caso 1: Practice Form
+docker compose exec app python3 -m pytest -v test/test_practice_form.py
+
+# Caso 2: Create User
+docker compose exec app python3 -m pytest -v test/test_create_user.py
+
+# Caso 3: Select Menu
+docker compose exec app python3 -m pytest -v test/test_select_menu.py
+
+# Caso 4: Web Tables CRUD
+docker compose exec app python3 -m pytest -v test/test_web_tables_crud.py
+
+# Caso 5: Web Tables Validations (Empty & Invalid Format)
+docker compose exec app python3 -m pytest -v test/test_web_tables_validation.py
+```
+
+### Detener el entorno
+Al finalizar las pruebas:
+```bash
+docker compose down
+```

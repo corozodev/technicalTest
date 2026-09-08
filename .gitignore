@@ -1,6 +1,33 @@
-# Unit test & pytest coverage reports
-*.pytest_cache/
-*./
-*__pycache__/
-*.idea/
-*.env
+# Python bytecode and cache directories
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Test and coverage output
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Local environment configuration
+.env
+.env.*
+!.env.example
+
+# Selenium/WebDriver logs and generated browser data
+geckodriver.log
+chromedriver.log
+*.log
+
+# IDE and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

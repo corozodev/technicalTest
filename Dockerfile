@@ -1,6 +1,6 @@
 FROM python:alpine3.18
 
-RUN apk add --no-cache bash && \
+RUN apk add --no-cache bash firefox-esr && \
     rm -rf /var/vache/apk*
 
 RUN python3 -m ensurepip

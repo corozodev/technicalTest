@@ -1,5 +1,3 @@
-version: "3.12"
-
 services:
   selenium:
     image: selenium/standalone-chrome:latest
