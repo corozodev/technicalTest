@@ -111,3 +111,48 @@ Al finalizar las pruebas:
 ```bash
 docker compose down
 ```
+
+---
+
+## Performance Testing Bonus
+
+Como valor agregado a esta evaluación técnica, implementé un módulo de pruebas de rendimiento utilizando **k6** para evaluar endpoints representativos de la API pública de [ReqRes](https://reqres.in/):
+
+- **Herramienta utilizada:** k6 (ejecutado mediante contenedor Docker oficial `grafana/k6:latest` o mediante CLI local).
+- **API y Endpoints probados:**
+  - `GET /api/users?page=2` (lista paginada de usuarios)
+  - `GET /api/users/2` (detalle de usuario individual)
+- **Autenticación:** Diseñé el script en `performance/reqres.js` para consumir la credencial desde la variable de entorno `REQRES_API_KEY` (`x-api-key: ${REQRES_API_KEY}`), evitando almacenar secretos en el código.
+- **Escenario de carga:** 10 Virtual Users (VUs) concurrentes durante 30 segundos con pacing controlado (`sleep`) para generar tráfico estable y respetuoso con una API pública.
+- **Criterios de evaluación (Thresholds):**
+  - Tasa de error (`http_req_failed`): `< 1%`
+  - Tiempo de respuesta (`http_req_duration` p95): `< 1000 ms`
+  - Aserciones de contenido (`checks`): `> 99%`
+
+> *Nota importante:* The thresholds used in this exercise are test criteria defined for the technical assessment and should not be interpreted as official ReqRes SLAs.
+
+### Cómo ejecutar la prueba de performance
+
+```bash
+# Ejecución recomendada mediante Docker (sin requerir instalar k6 localmente):
+docker run --rm -i -v "$PWD/performance:/performance" -e REQRES_API_KEY="your_api_key_here" grafana/k6 run /performance/reqres.js
+
+# O mediante k6 local:
+REQRES_API_KEY="your_api_key_here" k6 run performance/reqres.js
+```
+
+### Resultados obtenidos en la ejecución real
+
+- **Total Requests:** 400 peticiones (12.92 req/s)
+- **Failed requests:** 0 peticiones
+- **Error rate:** 0.00%
+- **Checks exitosos:** 800 / 800 (100.00%)
+- **Average duration:** 16.56 ms
+- **Median duration:** 10.42 ms
+- **p90 duration:** 12.21 ms
+- **p95 duration:** 18.77 ms
+- **Max duration:** 430.51 ms
+
+**Interpretación objetiva:**
+Under the defined test conditions, the endpoint maintained an error rate below the configured threshold and met the response-time threshold.
+
